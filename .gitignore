@@ -1,10 +1,13 @@
-# Python
+# Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
+
+# C extensions
 .Python
-env/
+
+# Distribution / packaging
 build/
 develop-eggs/
 dist/
@@ -20,14 +23,20 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+
+# Virtual environments
 .venv/
 venv/
+env/
 ENV/
 
-# Jupyter Notebook
+# UV cache
+.uv/
+
+# Jupyter Notebook checkpoints
 .ipynb_checkpoints
 
-# Environment variables (Bảo mật)
+# Environment variables
 .env
 .flaskenv
 
@@ -35,32 +44,35 @@ ENV/
 *.db
 *.sqlite3
 
-# Data files (Vì file dataset của bạn rất nặng, không nên push lên Git)
-simulator/data/*.csv
-backend/data/*.csv
+# Datasets and large binary data (>100MB, excluded from Git)
+simulator/data/
+backend/data/
+Models/XGBoost/Dataset/
+Dataset/
+dataset/
+data/
+*.csv
+*.parquet
 
-# Logs
+# Temporary / scratch scripts
+dump.py
+note.txt
+project_dump.txt
+
+# Log files
 *.log
 logs/
 
-# Operating System
+# Operating System files
 .DS_Store
 Thumbs.db
+[Dd]esktop.ini
 
-# IDEs
+# IDE configurations
 .vscode/
 .idea/
 *.swp
 *.swo
 
-*.csv
-*.txt
-
-Dataset/
-
-dump.py
-
-*.pth
-*.h5
-*.json
-*.keras
+# Large deep learning checkpoints (>100MB)
+*.ckpt

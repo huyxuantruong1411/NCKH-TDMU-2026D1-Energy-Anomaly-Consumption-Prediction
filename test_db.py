@@ -5,23 +5,23 @@ from sqlalchemy.exc import OperationalError
 DATABASE_URL = "postgresql://postgres:14112002@localhost:5433/energy_db"
 
 def test_connection():
-    print(f"Đang thử kết nối đến: {DATABASE_URL} ...\n")
+    print(f"[INFO] Testing connection to database: {DATABASE_URL} ...\n")
     try:
         engine = create_engine(DATABASE_URL)
         
         with engine.connect() as connection:
-            print("✅ KẾT NỐI THÀNH CÔNG!")
-            print("Database 'energy_db' trong Docker đang hoạt động và sẵn sàng nhận dữ liệu.")
+            print("[INFO] Database connection established successfully.")
+            print("[INFO] Database 'energy_db' is accessible and ready to accept transactions.")
             
     except OperationalError as e:
-        print("❌ KẾT NỐI THẤT BẠI!")
-        print("Vui lòng kiểm tra lại:")
-        print(" 1. Docker đã chạy lệnh 'docker-compose up -d' chưa?")
-        print(" 2. Container 'energy_postgres' có đang ở trạng thái 'Up' không?")
-        print(f"\nChi tiết lỗi từ hệ thống:\n{e}")
+        print("[ERROR] Database connection failed.")
+        print("[ERROR] Please verify the following prerequisites:")
+        print(" 1. Ensure Docker services are running: 'docker-compose up -d'")
+        print(" 2. Verify that container 'energy_postgres' status is 'Up'")
+        print(" 3. Verify user credentials and port forwarding (port 5433).")
+        print(f"\n[DETAILS] Exception message:\n{e}")
     except Exception as e:
-        print("❌ Đã xảy ra lỗi không xác định:")
-        print(e)
+        print(f"[ERROR] An unexpected error occurred: {e}")
 
 if __name__ == "__main__":
     test_connection()

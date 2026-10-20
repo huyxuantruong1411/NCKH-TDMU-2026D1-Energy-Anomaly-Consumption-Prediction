@@ -59,36 +59,35 @@ if __name__ == "__main__":
     df_headers = pd.read_csv("data/electricity_cleaned.csv", nrows=0)
     valid_columns = [col for col in df_headers.columns if col.lower() != 'timestamp' and not col.startswith('Unnamed')]
     target_buildings = valid_columns[:50]
-    print(f"✅ Tự động chọn {len(target_buildings)} tòa nhà.")
+    print(f"[INFO] Selected {len(target_buildings)} building time-series for streaming simulation.")
     
     all_data = []
     for idx, b in enumerate(target_buildings):
-        print(f"[{idx+1}/{len(target_buildings)}] Nạp dữ liệu: {b}...")
+        print(f"[DATA] Ingesting building series [{idx+1}/{len(target_buildings)}]: {b}...")
         df_raw = load_and_merge_data(b, global_weather_df)
         all_data.append(create_advanced_features(df_raw).iloc[500:])
         
     df_stream = pd.concat(all_data).sort_values('timestamp')
     feature_cols = [c for c in df_stream.columns if c not in ['timestamp', 'load', 'log_load', 'building_name']]
     
-    # --- CẤU HÌNH TIÊM LỖI DEMO ---
-    INJECT_FAULT_RATE = 0.02 # Tỉ lệ 2% bị dính lỗi để Demo (Trung bình 1 tiếng có 1 tòa dính chưởng)
-    FAULT_MULTIPLIER = 1.8 # Nhân tải thực tế lên 1.8 lần (Gây đột biến)
+    # Fault injection parameter settings for empirical validation
+    INJECT_FAULT_RATE = 0.02
+    FAULT_MULTIPLIER = 1.8
     
-    print("="*60)
-    print(f"🚀 BẮT ĐẦU STREAM + CHẾ ĐỘ TIÊM LỖI TỰ ĐỘNG ({INJECT_FAULT_RATE*100}%)")
-    print("="*60)
+    print("=" * 60)
+    print(f"[INFO] Initiating data stream with synthetic fault injection rate: {INJECT_FAULT_RATE * 100:.1f}%.")
+    print("=" * 60)
     
     grouped = df_stream.groupby('timestamp')
     for ts, group in grouped:
-        print(f"--- Mạng lưới khung giờ: {ts} ---")
+        print(f"[STREAM] Processing timestamp: {ts}")
         for _, row in group.iterrows():
             features_array = row[feature_cols].tolist()
             actual_load = float(row["load"])
             
-            # [TIÊM LỖI]: Bắt xác suất ngẫu nhiên
             is_injected = False
             if random.random() < INJECT_FAULT_RATE:
-                actual_load = actual_load * FAULT_MULTIPLIER # Tăng vọt tải
+                actual_load = actual_load * FAULT_MULTIPLIER
                 is_injected = True
                 
             payload = {
@@ -100,6 +99,6 @@ if __name__ == "__main__":
             producer.send("energy_stream", payload)
             
             if is_injected:
-                print(f"💥 [INJECTED FAULT] Đã tiêm lỗi vào {row['building_name']} (Load: {actual_load:.2f})")
+                print(f"[FAULT_INJECTION] Synthetic anomaly injected into {row['building_name']} (Load: {actual_load:.2f} kWh).")
             
         time.sleep(0.5)

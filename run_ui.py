@@ -13,12 +13,12 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 with socketserver.TCPServer(("", PORT), Handler) as httpd:
-    print("="*60)
-    print(f"🚀 GIAO DIỆN WEB ĐÃ KHỞI ĐỘNG THÀNH CÔNG!")
-    print(f"👉 Hãy mở trình duyệt và truy cập: http://localhost:{PORT}")
-    print("="*60)
-    print("Nhấn Ctrl+C để tắt Web Server.")
+    print("=" * 60)
+    print(f"[INFO] Web user interface server started successfully on port {PORT}.")
+    print(f"[INFO] Access dashboard via URL: http://localhost:{PORT}")
+    print("=" * 60)
+    print("[INFO] Press Ctrl+C to terminate the server.")
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:
-        print("\nĐã tắt Web Server.")
+        print("\n[INFO] Web user interface server stopped.")

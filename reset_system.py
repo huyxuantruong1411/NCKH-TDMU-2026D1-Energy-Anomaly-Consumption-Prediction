@@ -9,30 +9,30 @@ KAFKA_BROKER = "localhost:29092"
 TOPIC_NAME = "energy_stream"
 
 def reset_database():
-    print(f"🔄 Đang kết nối Database: {DATABASE_URL}")
+    print(f"[INFO] Connecting to database: {DATABASE_URL}")
     try:
         engine = create_engine(DATABASE_URL)
         with engine.begin() as conn:
             conn.execute(text("DROP TABLE IF EXISTS energy_records CASCADE;"))
-        print("✅ [Database] Đã xóa hoàn toàn bảng cũ. Bảng mới (có XAI và Weather) sẽ được tạo tự động.")
+        print("[INFO] Database reset completed. Table 'energy_records' dropped successfully.")
     except Exception as e:
-        print(f"❌ [Database] Lỗi khi dọn dẹp DB: {e}")
+        print(f"[ERROR] Database reset encountered an error: {e}")
 
 def reset_kafka():
-    print(f"🔄 Đang kết nối Kafka: {KAFKA_BROKER}")
+    print(f"[INFO] Connecting to Kafka broker: {KAFKA_BROKER}")
     try:
         admin_client = KafkaAdminClient(bootstrap_servers=KAFKA_BROKER)
         admin_client.delete_topics([TOPIC_NAME])
-        print(f"✅ [Kafka] Đã xóa Topic '{TOPIC_NAME}'.")
+        print(f"[INFO] Kafka topic '{TOPIC_NAME}' deleted successfully.")
         time.sleep(2) 
     except UnknownTopicOrPartitionError:
-        print(f"⚠️ [Kafka] Topic không tồn tại.")
+        print(f"[WARNING] Kafka topic '{TOPIC_NAME}' does not exist.")
     except Exception as e:
-        print(f"❌ [Kafka] Lỗi Kafka: {e}")
+        print(f"[ERROR] Kafka reset encountered an error: {e}")
 
 if __name__ == "__main__":
-    print("="*60)
-    print("🚧 BẮT ĐẦU RESET HỆ THỐNG (ENTERPRISE UPGRADE) 🚧")
+    print("=" * 60)
+    print("[SYSTEM] Initiating full system reset...")
     reset_database()
     reset_kafka()
-    print("🎉 HOÀN TẤT RESET!")
+    print("[SYSTEM] System reset completed successfully.")

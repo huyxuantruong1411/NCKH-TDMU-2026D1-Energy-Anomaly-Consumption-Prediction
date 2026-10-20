@@ -15,7 +15,7 @@ def consume_messages():
             enable_auto_commit=True,
             group_id='energy_enterprise_group'
         )
-        print("✅ Consumer Enterprise đang chạy...")
+        print("[INFO] Kafka Consumer backend service active and listening on topic 'energy_stream'.")
         
         for message in consumer:
             db = SessionLocal()
@@ -34,11 +34,11 @@ def consume_messages():
                 db.commit()
             except Exception as inner_e:
                 db.rollback()
-                print(f"Lỗi xử lý message: {inner_e}")
+                print(f"[WARNING] Stream processing error: {inner_e}")
             finally:
                 db.close()
     except Exception as e:
-        print(f"❌ Lỗi khởi tạo Consumer: {e}")
+        print(f"[ERROR] Kafka Consumer initialization failed: {e}")
 
 def start_consumer_thread():
     threading.Thread(target=consume_messages, daemon=True).start()

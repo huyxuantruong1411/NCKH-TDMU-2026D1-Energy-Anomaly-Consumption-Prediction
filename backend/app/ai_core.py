@@ -34,25 +34,25 @@ class AnomalyDetector:
             anomaly_threshold = actual_load * 0.1 
         else:
             # =================================================================
-            # ÁP DỤNG PHƯƠNG PHÁP MỚI: HYBRID K-MEANS + IQR
+            # HYBRID ANOMALY DETECTION: STATISTICAL IQR AND K-MEANS CLUSTERING
             # =================================================================
             
-            # 1. Phương pháp Cơ sở (Baseline: Statistical IQR Only)
+            # 1. Baseline statistical thresholding: Interquartile Range (IQR)
             q75, q25 = np.percentile(history, [75, 25])
             iqr = q75 - q25
             median_res = np.median(history)
             tau_stat = median_res + (self.k_factor * iqr)
             
-            # 2. Phương pháp Đề xuất (Proposed: K-Means Offset)
+            # 2. Proposed unsupervised clustering thresholding: K-Means offset
             res_2d = np.array(history).reshape(-1, 1)
             kmeans = KMeans(n_clusters=2, random_state=42, n_init=10)
             kmeans.fit(res_2d)
             tau_kmeans = float(np.max(kmeans.cluster_centers_))
             
-            # 3. Giao thoa ngưỡng (Hybrid Threshold)
+            # 3. Hybrid decision boundary
             dynamic_threshold = max(tau_stat, tau_kmeans)
             
-            # Đảm bảo ngưỡng không nhỏ hơn 10% tải thực tế để tránh nhiễu vi mô
+            # Ensure minimum noise floor of 10% actual load
             anomaly_threshold = max(dynamic_threshold, actual_load * 0.1)
             # =================================================================
         
