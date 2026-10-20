@@ -5,7 +5,7 @@ This directory contains experimental implementations, model training workflows, 
 ## 1. Primary Model: XGBoost with Optuna Hyperparameter Optimization (`Models/XGBoost`)
 
 ### 1.1. Directory Structure
-- `Code/Demo_XGBoost_5.ipynb`: Interactive Jupyter Notebook containing exploratory data analysis, feature engineering pipelines, automated Bayesian hyperparameter optimization with Optuna, and residual diagnostics.
+- `Code/Demo_XGBoost_2.ipynb` & `Code/demo_xgboost_2.py`: Interactive Jupyter Notebook and execution script containing exploratory data analysis, feature engineering pipelines, automated Bayesian hyperparameter optimization with Optuna, and residual diagnostics.
 - `xgboost_forecasting_optuna.json`: Serialized booster artifact containing trained decision tree ensembles and feature mapping metadata.
 - `label_encoder_optuna.pkl`: Serialized Scikit-learn LabelEncoder instance for categorical building identifiers.
 - `result.txt`: Empirical error metric summaries and comparative benchmarks against peer-reviewed international publications.

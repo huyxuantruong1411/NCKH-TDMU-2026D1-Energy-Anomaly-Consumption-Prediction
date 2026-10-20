@@ -11,11 +11,11 @@ Direct links to the interactive research notebooks for model training, validatio
 
 | Research Model | Architecture & Framework | Interactive Jupyter Notebook | Focus & Pipeline Stage |
 | :--- | :--- | :--- | :--- |
-| **Primary Model** | XGBoost + Optuna Bayesian Optimization | [Demo_XGBoost_5.ipynb](Models/XGBoost/Code/Demo_XGBoost_5.ipynb) | End-to-end training pipeline, lag/weather feature engineering, Optuna hyperparameter optimization, and residual diagnostics. |
+| **Primary Model** | XGBoost + Optuna Bayesian Optimization | [Demo_XGBoost_2.ipynb](Models/XGBoost/Code/Demo_XGBoost_2.ipynb) | End-to-end training pipeline, lag/weather feature engineering, Optuna hyperparameter optimization, and residual diagnostics. |
 | **Deep Learning** | Transformer & Mamba State Space Model | [Demo_Transformer_2.ipynb](Models/Transformer/Demo_Transformer_2.ipynb) | Multi-head self-attention mechanisms and structured state space sequence modeling for load forecasting. |
 
 > **Direct Repository Links:**
-> - Primary Forecasting Notebook: [`Models/XGBoost/Code/Demo_XGBoost_5.ipynb`](Models/XGBoost/Code/Demo_XGBoost_5.ipynb)
+> - Primary Forecasting Notebook: [`Models/XGBoost/Code/Demo_XGBoost_2.ipynb`](Models/XGBoost/Code/Demo_XGBoost_2.ipynb)
 > - Deep Learning Sequence Notebook: [`Models/Transformer/Demo_Transformer_2.ipynb`](Models/Transformer/Demo_Transformer_2.ipynb)
 
 ---
@@ -235,7 +235,8 @@ energy_anomaly_project/
 |   |   `-- best_transformer_model.keras
 |   `-- XGBoost/                    # Primary XGBoost research workspace
 |       |-- Code/
-|       |   `-- Demo_XGBoost_5.ipynb
+|       |   |-- Demo_XGBoost_2.ipynb
+|       |   `-- demo_xgboost_2.py
 |       |-- Paper (Reference)/      # Academic reference literature and dataset descriptors
 |       |-- label_encoder_optuna.pkl
 |       |-- result.txt              # Empirical evaluation metrics and benchmark records
