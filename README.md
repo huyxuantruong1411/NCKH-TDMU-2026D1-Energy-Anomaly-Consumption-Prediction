@@ -5,6 +5,21 @@ A real-time big data and machine learning framework combining Optuna-optimized X
 
 ---
 
+## Quick Access to Model Notebooks
+
+Direct links to the interactive research notebooks for model training, validation, and benchmarking:
+
+| Research Model | Architecture & Framework | Interactive Jupyter Notebook | Focus & Pipeline Stage |
+| :--- | :--- | :--- | :--- |
+| **Primary Model** | XGBoost + Optuna Bayesian Optimization | [Demo_XGBoost_5.ipynb](Models/XGBoost/Code/Demo_XGBoost_5.ipynb) | End-to-end training pipeline, lag/weather feature engineering, Optuna hyperparameter optimization, and residual diagnostics. |
+| **Deep Learning** | Transformer & Mamba State Space Model | [Demo_Transformer_2.ipynb](Models/Transformer/Demo_Transformer_2.ipynb) | Multi-head self-attention mechanisms and structured state space sequence modeling for load forecasting. |
+
+> **Direct Repository Links:**
+> - Primary Forecasting Notebook: [`Models/XGBoost/Code/Demo_XGBoost_5.ipynb`](Models/XGBoost/Code/Demo_XGBoost_5.ipynb)
+> - Deep Learning Sequence Notebook: [`Models/Transformer/Demo_Transformer_2.ipynb`](Models/Transformer/Demo_Transformer_2.ipynb)
+
+---
+
 ## Table of Contents
 
 1. [Abstract and Problem Statement](#1-abstract-and-problem-statement)
@@ -65,38 +80,82 @@ The end-to-end framework is decoupled into five modular layers:
 
 ### 3.1. Data Preprocessing and Feature Engineering
 Missing values within raw meter series are treated via bounded linear interpolation. The engineered feature space incorporates:
+
 - **Cyclical Temporal Encodings**: Hour of day, day of week, month, weekend binary flags, and harmonic sine/cosine trigonometric transformations:
-  $$\text{hour}_{\sin} = \sin\left(\frac{2\pi \cdot \text{hour}}{24}\right), \quad \text{hour}_{\cos} = \cos\left(\frac{2\pi \cdot \text{hour}}{24}\right)$$
-- **Autoregressive Lag Variables**: Sequential historical load observations capturing localized short-term inertia and macro temporal periodicities:
-  $$\text{load\_lag}_{k} \in \{1, 2, 3, 4, 5, 6, 24, 48, 168\} \text{ hours}$$
+
+$$
+\text{hour}_{\sin} = \sin\left(\frac{2\pi \cdot \text{hour}}{24}\right), \quad \text{hour}_{\cos} = \cos\left(\frac{2\pi \cdot \text{hour}}{24}\right)
+$$
+
+- **Autoregressive Lag Variables**: Sequential historical load observations capturing localized short-term inertia and macro temporal periodicities across lag indices $k$:
+
+$$
+k \in \{1, 2, 3, 4, 5, 6, 24, 48, 168\} \quad [\text{hours}]
+$$
+
 - **Rolling Window Aggregations**: Moving average and moving standard deviation computed across 3-hour and 24-hour windows (`roll_mean_3h`, `roll_std_3h`, `roll_mean_24h`), alongside daily extremes (`roll_max_24h`, `roll_min_24h`) and the short-term demand ratio (`load_ratio_24h`).
 - **Microclimate and Thermodynamic Covariates**: Ambient dry-bulb temperature (`airTemperature`), dew point temperature (`dewTemperature`), wind velocity (`windSpeed`), atmospheric pressure (`seaLvlPressure`), multi-hour temperature lags (`temp_lag_1..6`), moving temperature variance (`temp_roll_std_6h`), and empirical air enthalpy:
-  $$\text{Enthalpy} = 1.006 \cdot T_{\text{air}} + 0.622 \cdot T_{\text{dew}} \quad [\text{kJ/kg}]$$
+
+$$
+\text{Enthalpy} = 1.006 \cdot T_{\text{air}} + 0.622 \cdot T_{\text{dew}} \quad [\text{kJ/kg}]
+$$
 
 ### 3.2. Forecasting Engine: Bayesian-Optimized XGBoost
 The base load forecaster uses Gradient Boosted Decision Trees (XGBoost) trained on logarithmic transformed load values to stabilize residual heteroscedasticity:
-$$y_{\text{log}} = \ln(1 + \text{load})$$
+
+$$
+y_{\text{log}} = \ln(1 + y)
+$$
+
 Hyperparameter exploration was conducted using Optuna's Tree-structured Parzen Estimator (TPE), tuning tree depth (`max_depth`), learning rate (`learning_rate`), boosting rounds (`n_estimators`), row/column subsampling ratios (`subsample`, `colsample_bytree`), and L1/L2 regularization terms (`reg_alpha`, `reg_lambda`).
 
 ### 3.3. Proposed Hybrid Anomaly Detection Thresholding (IQR + K-Means)
 Given actual consumption $y_t$ and the inverse-transformed model prediction $\hat{y}_t$, the absolute prediction residual is defined as:
-$$e_t = |y_t - \hat{y}_t|$$
+
+$$
+e_t = |y_t - \hat{y}_t|
+$$
+
 Residuals are collected within a sliding historical window of length $W = 168$ hours (one full weekly operational cycle). The dynamic threshold $\tau_t$ is determined through the confluence of parametric statistical dispersion and non-parametric clustering:
 
 1. **Statistical Interquartile Range (IQR) Formulation**:
-   $$\tau_{\text{stat}} = \text{Median}(e) + k \cdot (Q_3 - Q_1)$$
-   where $k = 3.0$ acts as a conservative outlier scaling factor, and $Q_1$, $Q_3$ denote the 25th and 75th percentiles of historical residuals.
+
+$$
+\tau_{\text{stat}} = \text{Median}(e) + k \cdot (Q_3 - Q_1)
+$$
+
+where $k = 3.0$ acts as an outlier scaling factor, and $Q_1$, $Q_3$ denote the 25th and 75th percentiles of historical residuals.
+
 2. **Unsupervised K-Means Clustering Offset**:
-   Residuals in the sliding window are partitioned into $C = 2$ clusters (distinguishing nominal residual variance from abnormal operational spikes). The clustering threshold is set to the higher cluster centroid:
-   $$\tau_{\text{kmeans}} = \max(\mu_1, \mu_2)$$
+Residuals in the sliding window are partitioned into $C = 2$ clusters (distinguishing nominal residual variance from abnormal operational spikes). The clustering threshold is set to the higher cluster centroid:
+
+$$
+\tau_{\text{kmeans}} = \max(\mu_1, \mu_2)
+$$
+
 3. **Hybrid Decision Rule**:
-   $$\tau_t = \max\left(\tau_{\text{stat}}, \tau_{\text{kmeans}}, 0.1 \cdot y_t\right)$$
-   where $0.1 \cdot y_t$ enforces a 10% lower-bound noise floor to prevent false triggers during low-load intervals. The binary anomaly classification function is formulated as:
-   $$\text{IsAnomaly}(t) = \begin{cases} 1 & \text{if } e_t > \tau_t \\ 0 & \text{otherwise} \end{cases}$$
+
+$$
+\tau_t = \max\left(\tau_{\text{stat}}, \tau_{\text{kmeans}}, 0.1 \cdot y_t\right)
+$$
+
+where $0.1 \cdot y_t$ enforces a 10% lower-bound noise floor to prevent false triggers during low-load intervals. The binary anomaly classification function is formulated as:
+
+$$
+\text{IsAnomaly}(t) = 
+\begin{cases} 
+1 & \text{if } e_t > \tau_t \\ 
+0 & \text{otherwise} 
+\end{cases}
+$$
 
 ### 3.4. Explainable AI (XAI) Framework
-Upon identifying an anomaly ($\text{IsAnomaly}(t) = 1$), the XAI engine computes the normalized feature divergence between the current feature vector $X_t$ and the trailing historical baseline mean $\bar{X}_{\text{baseline}}$:
-$$\Delta f_j = \frac{|X_{t,j} - \bar{X}_{\text{baseline},j}|}{|\bar{X}_{\text{baseline},j}| + \epsilon} \times 100\%$$
+When an anomaly is detected (`IsAnomaly(t) == 1`), the XAI engine computes the normalized percentage feature divergence between the current feature vector $X_t$ and the historical trailing baseline vector $\bar{X}_{\text{baseline}}$:
+
+$$
+\Delta f_j = \frac{|X_{t,j} - \bar{X}_{\text{baseline},j}|}{|\bar{X}_{\text{baseline},j}| + \epsilon} \times 100
+$$
+
 Excluding trivial temporal identifiers, the top-ranking features by percentage divergence $\Delta f_j$ are isolated and mapped to technical advisory definitions (e.g., thermal lag compensation, excessive infiltration, equipment short-cycling, or unexpected after-hours demand).
 
 ---
