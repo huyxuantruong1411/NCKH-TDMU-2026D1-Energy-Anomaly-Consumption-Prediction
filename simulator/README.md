@@ -1,19 +1,21 @@
-# Module Mo Phong Du Lieu IoT: Data Simulator & Producer
+# IoT Telemetry Simulator: Stream Producer
 
-## 1. Nguyen ly hoat dong (Working Principle)
+## 1. Operating Principles
 
-Module Simulator dong vai tro mo phong mang luoi cam bien IoT cong to dien thoi gian thuc tu tap du lieu Building Data Genome Project 2 (BDG2).
-- **Hop nhat du lieu da nguon**: Dong bo chuoi thoi gian phu tai dien nang (`electricity_cleaned.csv`) voi du lieu vi khi hau tai tram quan trac dia phuong (`weather.csv`).
-- **Tao dac trung dong (Dynamic Feature Engineering)**:
-  - Cac bien tre phu tai: `load_lag_1`, `load_lag_2`, `load_lag_3`, `load_lag_4`, `load_lag_5`, `load_lag_6`, `load_lag_24`, `load_lag_48`, `load_lag_168`.
-  - Cac dac trung thong ke trượt: `roll_mean_3h`, `roll_std_3h`, `roll_mean_24h`, `roll_max_24h`, `roll_min_24h`, `load_ratio_24h`.
-  - Dac trung vi khi hau va nhiet dong luc hoc: `temp_lag_1..6`, `temp_roll_mean_6h`, `temp_roll_std_6h`, `enthalpy`.
-- **Co che tiem loi nhan tao (Synthetic Fault Injection)**: Tich hop module tiem loi ngau nhien voi ti le cau hinh (`INJECT_FAULT_RATE = 0.02`, he so tang vot `FAULT_MULTIPLIER = 1.8`) nham kiem thu do nhay va tinh on dinh cua thuat toan phat hien di thuong.
+The simulator emulates an enterprise IoT smart meter and environmental sensor network using the Building Data Genome Project 2 (BDG2) dataset.
 
-## 2. Huong dan van hanh (Execution Guide)
+- **Multi-Source Data Alignment**: Aligns high-resolution hourly electrical load records (`electricity_cleaned.csv`) with co-located meteorological observations (`weather.csv`).
+- **Dynamic Feature Engineering**:
+  - Autoregressive Lag Features: `load_lag_1`, `load_lag_2`, `load_lag_3`, `load_lag_4`, `load_lag_5`, `load_lag_6`, `load_lag_24`, `load_lag_48`, `load_lag_168`.
+  - Rolling Window Statistics: `roll_mean_3h`, `roll_std_3h`, `roll_mean_24h`, `roll_max_24h`, `roll_min_24h`, and `load_ratio_24h`.
+  - Meteorological and Thermodynamic Metrics: `temp_lag_1..6`, `temp_roll_mean_6h`, `temp_roll_std_6h`, and air enthalpy:
+    $$\text{Enthalpy} = 1.006 \times T_{\text{air}} + 0.622 \times T_{\text{dew}}$$
+- **Synthetic Fault Injection Mechanism**: Embeds controlled artificial anomalies with configurable injection probability (`INJECT_FAULT_RATE = 0.02`) and load spike multipliers (`FAULT_MULTIPLIER = 1.8`) to validate detection sensitivity and benchmark threshold robustness.
 
-Tu thu muc `simulator`:
+## 2. Execution Instructions
+
+Execute the telemetry producer from the `simulator/` directory:
 ```bash
 python producer.py
 ```
-Du lieu sau khi dong goi duoc truyen phat vao Kafka Topic `energy_stream` duoi dinh dang JSON payload.
+Each simulated reading is packaged into a structured JSON payload and dispatched to Apache Kafka under topic `energy_stream` at regular 0.5-second intervals.

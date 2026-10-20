@@ -61,7 +61,7 @@ def get_global_alerts(db: Session = Depends(get_db)):
                .filter(EnergyRecord.is_anomaly == 1).order_by(EnergyRecord.id.desc()).limit(10).all()
     return [{"timestamp": r[0], "building": r[1], "load": r[2]} for r in alerts]
 
-# [API LỊCH SỬ SỰ CỐ TÒA NHÀ] - Dành cho tính năng Snapshot Modal
+# Incident history endpoint for the system snapshot modal
 @app.get("/api/alerts/history")
 def get_building_alerts_history(building_name: str, db: Session = Depends(get_db)):
     alerts = db.query(EnergyRecord).filter(EnergyRecord.building_name == building_name, EnergyRecord.is_anomaly == 1).order_by(EnergyRecord.id.desc()).limit(50).all()

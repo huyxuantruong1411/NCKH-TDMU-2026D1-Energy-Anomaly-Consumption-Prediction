@@ -1,7 +1,7 @@
 from sqlalchemy import create_engine, Column, Integer, String, Float, Text
 from sqlalchemy.orm import declarative_base, sessionmaker
 
-# Đã đổi port sang 5433 để kết nối vào Docker
+# Configured to port 5433 mapped by Docker Compose
 DATABASE_URL = "postgresql://postgres:14112002@localhost:5433/energy_db"
 
 engine = create_engine(DATABASE_URL)

@@ -1,37 +1,38 @@
 # Backend Service: Enterprise Energy Anomaly Detection System (EEADS)
 
-## 1. Tong quan kien truc Backend (Architecture Overview)
+## 1. System Architecture Overview
 
-Backend du an EEADS dong vai tro la trung tam dieu phoi tinh toan thoi gian thuc, bao gom cac module chinh:
-1. **Streaming Consumer Module (`app/kafka_consumer.py`)**: Tiep nhan dong thoi du lieu phu tai dien nang va quan trac vi khi hau tu Apache Kafka thong qua topic `energy_stream`.
-2. **AI Inference & XAI Engine (`app/ai_core.py`)**: Thuc thi mo hinh XGBoost da duoc toi uu hoa sieu tham so bang Optuna de du bao phu tai ky vong; dong thoi ap dung thuat toan phan nguong dong Hybrid (ket hop giua phuong phap thong ke Interquartile Range - IQR va gom cum khong giam sat K-Means). Khi phat hien di thuong, engine se thuc hien phan ra dong gop dac trung (Feature Attribution) de phuc vu giai thich mo hinh (Explainable AI - XAI).
-3. **Data Persistence Module (`app/database.py`)**: Ket noi PostgreSQL ORM (SQLAlchemy) de luu tru toan bo nhat ky van hanh, chi so khi tuong va phan tich nguyen nhan XAI.
-4. **RESTful API Service (`app/main.py`)**: Cung cap he thong diem cuoi (Endpoints) hieu nang cao dua tren FastAPI phuc vu giao dien giam sat SPA.
+The EEADS backend service operates as the core computational and data coordination engine, comprising four primary architectural modules:
 
-## 2. Quan ly moi truong va goi phu thuoc voi UV (Environment Setup with UV)
+1. **Streaming Consumer Module (`app/kafka_consumer.py`)**: Continuously consumes real-time telemetry payloads containing building energy readings and local meteorological features from the Apache Kafka broker on topic `energy_stream`.
+2. **AI Inference and Explainable AI Engine (`app/ai_core.py`)**: Executes inference using the pre-trained, Optuna-tuned XGBoost model to generate baseline load expectations. Concurrently, it computes dynamic anomaly thresholds via a hybrid algorithm combining statistical Interquartile Range (IQR) analysis and unsupervised K-Means clustering. When an anomaly is detected, the engine performs relative feature attribution to isolate primary root causes.
+3. **Data Persistence Module (`app/database.py`)**: Leverages SQLAlchemy ORM connected to PostgreSQL to record operational histories, microclimate observations, model predictions, dynamic decision thresholds, and XAI diagnosis payloads.
+4. **RESTful API Service (`app/main.py`)**: High-performance HTTP service built on FastAPI delivering real-time telemetry, historical aggregates, time-series correlations, and incident logs to the Single Page Application (SPA) dashboard.
 
-He thong backend duoc chuan hoa quan ly bang cong cu **UV** thay the cho `virtualenv` va `pip` truyen thong nham dam bao tinh nhat quan cua cac goi phu thuoc (dependency lock) va toi uu toc do bien dich.
+## 2. Environment and Dependency Management via UV
 
-### 2.1. Cai dat goi phu thuoc
-Tu thu muc `backend`, thuc hien khoi tao va dong bo moi truong bang lenh:
+The backend environment is standardized using **UV**, a high-performance Python package and project manager that provides deterministic resolution and accelerated environment synchronization.
+
+### 2.1. Environment Synchronization
+From within the `backend/` directory, initialize and synchronize dependencies:
 ```bash
 uv sync
 ```
-Qua trinh nay se tu dong doc file cau hinh `pyproject.toml`, kiem tra tinh tuong thich va thiet lap moi truong cuc bo tai `.venv/`.
+This command inspects `pyproject.toml`, ensures cross-package compatibility, and builds the isolated virtual environment at `.venv/`.
 
-### 2.2. Khoi dong dich vu Backend API
-Su dung lenh `uv run` de thuc thi may chu Uvicorn:
+### 2.2. Executing the Backend Service
+Launch the Uvicorn ASGI server through `uv run`:
 ```bash
 uv run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-## 3. Danh muc API Endpoints (API Specification)
+## 3. REST API Specifications
 
-- `GET /api/buildings`: Tra ve danh sach ma dinh danh cac cong trinh dang duoc giam sat trong he thong.
-- `GET /api/data?building_name={name}&limit={limit}`: Truy van chuoi thoi gian phu tai thuc te, phu tai du bao, nguong an toan va nhan di thuong gan nhat.
-- `GET /api/stats/summary?building_name={name}`: Tinh toan thong ke tong dien nang tieu thu, dinh phu tai (max) va phu tai nen (min) trong 24 gio.
-- `GET /api/weather/correlation?building_name={name}&limit={limit}`: Cung cap chuoi du lieu tuong quan giua phu tai va cac yeu to vi khi hau (nhiet do, diem suong, van toc gio, khi ap).
-- `GET /api/explain?building_name={name}`: Tra ve ket qua phan tich XAI ve dac trung dong gop lon nhat vao bien dong bat thuong gan nhat.
-- `GET /api/alerts/global`: Liet ke danh sach 10 su co phu tai vuot nguong gan nhat tren toan bo mang luoi cong trinh.
-- `GET /api/alerts/history?building_name={name}`: Truy xuat nhat ky chi tiet cac su co phu tai lich su cua mot cong trinh cu the phuc vu che do chup trang thai (Snapshot Modal).
-- `GET /api/analytics/hourly_profile?building_name={name}`: Tinh toan ho so phu tai trung binh theo tung khung gio trong ngay (24h profile) dua tren du lieu lich su dai han.
+- `GET /api/buildings`: Retrieves the unique identifiers of all monitored buildings within the system.
+- `GET /api/data?building_name={name}&limit={limit}`: Queries the latest time series of actual load, predicted expectation, safety bounds, and anomaly classifications.
+- `GET /api/stats/summary?building_name={name}`: Computes 24-hour summary statistics including aggregate energy consumption (sum), peak load (max), and base load (min).
+- `GET /api/weather/correlation?building_name={name}&limit={limit}`: Returns multi-variate environmental series (ambient temperature, dew point, wind velocity, atmospheric pressure) correlated with electrical demand.
+- `GET /api/explain?building_name={name}`: Delivers the latest Explainable AI (XAI) feature attribution breakdown for an identified anomaly.
+- `GET /api/alerts/global`: Aggregates the 10 most recent anomaly events detected across the entire building portfolio.
+- `GET /api/alerts/history?building_name={name}`: Returns the historical incident log for a designated building, enabling detailed state snapshot inspections.
+- `GET /api/analytics/hourly_profile?building_name={name}`: Derives 24-hour baseline consumption profiles averaged over historical operational data.
